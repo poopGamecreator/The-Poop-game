@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poop Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #87CEEB;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .poop {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: brown;
+            border-radius: 50%;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="poop" id="poop"></div>
+    <div class="score" id="score">Score: 0</div>
+
+    <script>
+        const poop = document.getElementById('poop');
+        const scoreDisplay = document.getElementById('score');
+        const gameWidth = window.innerWidth;
+        const gameHeight = window.innerHeight;
+        let poopX = gameWidth / 2 - 25;
+        let poopY = gameHeight - 100;
+        let isMovingLeft = false;
+        let isMovingRight = false;
+        let obstacles = [];
+        let score = 0;
+
+        // Set initial position of poop
+        poop.style.left = poopX + 'px';
+        poop.style.bottom = poopY + 'px';
+
+        // Move the poop based on user input
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                isMovingLeft = true;
+            } else if (e.key === 'ArrowRight') {
+                isMovingRight = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') {
+                isMovingLeft = false;
+            } else if (e.key === 'ArrowRight') {
+                isMovingRight = false;
+            }
+        });
+
+        // Function to update the poop's position
+        function movePoop() {
+            if (isMovingLeft && poopX > 0) {
+                poopX -= 5;
+            } else if (isMovingRight && poopX < gameWidth - 50) {
+                poopX += 5;
+            }
+            poop.style.left = poopX + 'px';
+        }
+
+        // Function to create falling obstacles
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = Math.random() * (gameWidth - 40) + 'px';
+            obstacle.style.top = '0px';
+            document.body.appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        // Function to update obstacles' position
+        function moveObstacles() {
+            obstacles.forEach((obstacle, index) => {
+                let obstacleY = parseInt(obstacle.style.top);
+                if (obstacleY >= gameHeight - 50) {
+                    // Remove obstacle if it goes out of the screen
+                    obstacle.remove();
+                    obstacles.splice(index, 1);
+                    score++;
+                } else {
+                    obstacle.style.top = obstacleY + 5 + 'px';
+                }
+            });
+        }
+
+        // Collision detection function
+        function checkCollision() {
+            obstacles.forEach((obstacle) => {
+                let obstacleRect = obstacle.getBoundingClientRect();
+                let poopRect = poop.getBoundingClientRect();
+
+                if (
+                    poopRect.left < obstacleRect.left + obstacleRect.width &&
+                    poopRect.left + poopRect.width > obstacleRect.left &&
+                    poopRect.top < obstacleRect.top + obstacleRect.height &&
+                    poopRect.top + poopRect.height > obstacleRect.top
+                ) {
+                    alert('Game Over! Score: ' + score);
+                    resetGame();
+                }
+            });
+        }
+
+        // Update score on screen
+        function updateScore() {
+            scoreDisplay.textContent = 'Score: ' + score;
+        }
+
+        // Reset the game
+        function resetGame() {
+            obstacles.forEach((obstacle) => obstacle.remove());
+            obstacles = [];
+            score = 0;
+            poopX = gameWidth / 2 - 25;
+            poop.style.left = poopX + 'px';
+            updateScore();
+        }
+
+        // Game loop function
+        function gameLoop() {
+            movePoop();
+            moveObstacles();
+            checkCollision();
+            updateScore();
+
+            if (Math.random() < 0.01) {
+                createObstacle();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
